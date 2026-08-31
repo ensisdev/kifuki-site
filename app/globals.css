@@ -4,3 +4,57 @@
 @tailwind utilities;
 :root{--paper:#f4efe5;--ink:#161616;--muted:#6d685f;--violet:#7568c9;--pink:#ff6b9a;--cyan:#53d7d1;--yellow:#ffd83d}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:'Space Grotesk',sans-serif;overflow-x:hidden}button,a{cursor:pointer}.mono{font-family:'DM Mono',monospace}.paper{background-image:linear-gradient(rgba(22,22,22,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(22,22,22,.035) 1px,transparent 1px);background-size:28px 28px}.grain:after{content:"";pointer-events:none;position:fixed;inset:0;opacity:.045;z-index:50;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E")}.outline-text{-webkit-text-stroke:1.5px var(--ink);color:transparent}.sketch-border{border:1.5px solid var(--ink);box-shadow:4px 4px 0 var(--ink)}.hover-lift{transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}.hover-lift:hover{transform:translate(-3px,-5px);box-shadow:8px 9px 0 var(--ink)}.scribble{font-family:'DM Mono',monospace;letter-spacing:.08em;text-transform:uppercase}.noise-paper{background-color:var(--paper);background-image:radial-gradient(rgba(0,0,0,.08) .6px,transparent .7px);background-size:7px 7px}.selection::selection{background:var(--yellow)}@media(max-width:640px){.grain:after{opacity:.025}}
+
+@keyframes float{0%,100%{transform:translateY(0px) rotate(0deg)}50%{transform:translateY(-12px) rotate(1deg)}}
+@keyframes float-slow{0%,100%{transform:translateY(0px)}50%{transform:translateY(-8px)}}
+@keyframes pulse-glow{0%,100%{opacity:.4;transform:scale(1)}50%{opacity:.7;transform:scale(1.05)}}
+@keyframes spin-slow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes marquee-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes bounce-in{0%{transform:scale(0.3);opacity:0}50%{transform:scale(1.05)}70%{transform:scale(.9)}100%{transform:scale(1);opacity:1}}
+@keyframes slide-up{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes fade-in{from{opacity:0}to{opacity:1}}
+@keyframes wiggle{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+@keyframes gradient-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes star-twinkle{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+
+.animate-float{animation:float 6s ease-in-out infinite}
+.animate-float-slow{animation:float-slow 8s ease-in-out infinite}
+.animate-pulse-glow{animation:pulse-glow 3s ease-in-out infinite}
+.animate-spin-slow{animation:spin-slow 20s linear infinite}
+.animate-marquee{animation:marquee-scroll 25s linear infinite}
+.animate-shimmer{background-size:200% 100%;animation:shimmer 2s linear infinite}
+.animate-bounce-in{animation:bounce-in .6s cubic-bezier(.175,.885,.32,1.275)}
+.animate-slide-up{animation:slide-up .6s ease-out}
+.animate-fade-in{animation:fade-in .5s ease-out}
+.animate-wiggle{animation:wiggle 2s ease-in-out infinite}
+.animate-gradient{background-size:200% 200%;animation:gradient-shift 4s ease infinite}
+.animate-star{animation:star-twinkle 3s ease-in-out infinite}
+
+.card-hover{transition:all .35s cubic-bezier(.2,.8,.2,1)}
+.card-hover:hover{transform:translate(-4px,-6px) rotate(1deg);box-shadow:8px 10px 0 var(--ink)}
+
+.glow-violet{box-shadow:0 0 30px rgba(117,104,201,.3),0 0 60px rgba(117,104,201,.15)}
+.glow-pink{box-shadow:0 0 30px rgba(255,107,154,.3),0 0 60px rgba(255,107,154,.15)}
+.glow-cyan{box-shadow:0 0 30px rgba(83,215,209,.3),0 0 60px rgba(83,215,209,.15)}
+
+.text-gradient-violet{background:linear-gradient(135deg,var(--violet),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.text-gradient-pink{background:linear-gradient(135deg,var(--pink),var(--yellow));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+.hero-space{background:linear-gradient(180deg,#0a0a1a 0%,#12122a 40%,#1a1a3a 70%,var(--paper) 100%)}
+.hero-space .outline-text{-webkit-text-stroke-color:rgba(255,255,255,.8)}
+
+.sticker-peel{transition:all .4s cubic-bezier(.175,.885,.32,1.275)}
+.sticker-peel:hover{transform:rotate(-4deg) scale(1.05)}
+
+.admin-card{transition:all .3s cubic-bezier(.2,.8,.2,1)}
+.admin-card:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,0,0,.08)}
+
+.sidebar-link{transition:all .2s ease}
+.sidebar-link.active{background:var(--ink);color:var(--paper)}
+.sidebar-link:not(.active):hover{background:rgba(22,22,22,.05)}
+
+@media(prefers-reduced-motion:reduce){
+  .animate-float,.animate-float-slow,.animate-pulse-glow,.animate-spin-slow,.animate-marquee,.animate-shimmer,.animate-bounce-in,.animate-slide-up,.animate-fade-in,.animate-wiggle,.animate-gradient,.animate-star{animation:none!important}
+  .card-hover:hover,.sticker-peel:hover,.hover-lift:hover{transform:none!important}
+}
