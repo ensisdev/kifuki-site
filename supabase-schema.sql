@@ -1,0 +1,2 @@
+create table if not exists products (id text primary key, slug text unique not null, name text not null, description text default '', price numeric default 0, currency text default 'TRY', image text default '', category text default 'Sticker', featured boolean default false, "shopierUrl" text default '', "createdAt" text default now()::text);
+create table if not exists artworks (id text primary key, title text not null, image text default '', description text default '', year integer default 2026, featured boolean default false);
