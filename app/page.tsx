@@ -68,9 +68,7 @@ export default async function Home(){
           </Reveal>
         </div>
         <div className="relative">
-          <Reveal variant="zoom-rotate" delay={.2} duration={1.2}>
             <ThreeCharacter/>
-          </Reveal>
           <div className="absolute right-5 top-10 rotate-6 rounded-xl border border-white/20 bg-violet/80 px-4 py-3 text-xs font-bold text-white shadow-[4px_4px_0_rgba(0,0,0,.3)] backdrop-blur-sm animate-float">
             DRAW<br/>STICK<br/>REPEAT
           </div>

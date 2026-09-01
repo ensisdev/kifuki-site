@@ -121,9 +121,9 @@ export default function ThreeCharacter(){
         </div>
       </div>
 
-      {/* Bottom gradient overlay */}
-      <div className="pointer-events-none absolute inset-0 rounded-[3rem] bg-gradient-to-t from-[#060612]/70 via-transparent to-[#060612]/20 z-20"/>
-      <div className="pointer-events-none absolute inset-0 rounded-[3rem] animate-glow-pulse z-20"/>
+      {/* Bottom gradient overlay - below character */}
+      <div className="pointer-events-none absolute inset-0 rounded-[3rem] bg-gradient-to-t from-[#060612]/70 via-transparent to-[#060612]/20 z-[5]"/>
+      <div className="pointer-events-none absolute inset-0 rounded-[3rem] animate-glow-pulse z-[5]"/>
     </div>
   );
 }
