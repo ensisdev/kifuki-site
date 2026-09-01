@@ -4,6 +4,7 @@ import {PerspectiveCamera} from '@react-three/drei';
 import {useRef,useMemo,useState,useEffect,Component,ReactNode} from 'react';
 import * as THREE from 'three';
 import Image from 'next/image';
+import {motion,useMotionValue,useSpring,useScroll,useTransform} from 'framer-motion';
 
 class WebGLErrorBoundary extends Component<{children:ReactNode},{hasError:boolean}>{
   state={hasError:false};
@@ -97,8 +98,29 @@ export default function ThreeCharacter(){
   const[supportsWebGL,setSupportsWebGL]=useState<boolean|null>(null);
   useEffect(()=>{try{const c=document.createElement('canvas');const gl=c.getContext('webgl')||c.getContext('experimental-webgl');setSupportsWebGL(!!gl)}catch{setSupportsWebGL(false)}},[]);
 
+  // Mouse parallax
+  const mouseX=useMotionValue(0);const mouseY=useMotionValue(0);
+  const springX=useSpring(mouseX,{stiffness:50,damping:20});
+  const springY=useSpring(mouseY,{stiffness:50,damping:20});
+
+  // Scroll transforms
+  const containerRef=useRef<HTMLDivElement>(null);
+  const{scrollYProgress}=useScroll({target:containerRef,offset:['start end','end start']});
+  const scrollRotateX=useTransform(scrollYProgress,[0,1],[8,-8]);
+  const scrollRotateY=useTransform(scrollYProgress,[0,1],[-5,5]);
+  const scrollScale=useTransform(scrollYProgress,[0,.5,1],[.92,1,.95]);
+  const scrollY=useTransform(scrollYProgress,[0,1],[40,-40]);
+  const glowOpacity=useTransform(scrollYProgress,[0,.5,1],[.3,.8,.4]);
+
+  function handleMouse(e:React.MouseEvent){
+    const rect=(e.currentTarget as HTMLElement).getBoundingClientRect();
+    mouseX.set((e.clientX-rect.left-rect.width/2)/rect.width*12);
+    mouseY.set((e.clientY-rect.top-rect.height/2)/rect.height*8);
+  }
+  function handleLeave(){mouseX.set(0);mouseY.set(0)}
+
   return (
-    <div className="relative h-[520px] w-full sm:h-[680px]">
+    <div ref={containerRef} className="relative h-[520px] w-full sm:h-[680px]" onMouseMove={handleMouse} onMouseLeave={handleLeave}>
       {/* Space background with gradients */}
       <div className="absolute inset-0 rounded-[3rem] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#060612] via-[#0c0c24] to-[#141432]"/>
@@ -116,9 +138,17 @@ export default function ThreeCharacter(){
         </WebGLErrorBoundary>
       )}
 
-      {/* Character image - HTML overlay with CSS animations */}
-      <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-        <div className="relative animate-float" style={{filter:'drop-shadow(0 0 30px rgba(117,104,201,.4)) drop-shadow(0 0 60px rgba(255,107,154,.2))'}}>
+      {/* Character image - with mouse parallax + scroll transforms */}
+      <motion.div
+        className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"
+        style={{rotateX:scrollRotateX,rotateY:scrollRotateY,scale:scrollScale,y:scrollY,perspective:800}}
+      >
+        <motion.div
+          className="relative"
+          style={{x:springX,y:springY,filter:'drop-shadow(0 0 30px rgba(117,104,201,.4)) drop-shadow(0 0 60px rgba(255,107,154,.2))'}}
+          animate={{y:[0,-14,0]}}
+          transition={{duration:6,ease:'easeInOut',repeat:Infinity}}
+        >
           <Image
             src="/character/karakter.png"
             alt="Kifuki Character"
@@ -129,10 +159,10 @@ export default function ThreeCharacter(){
             priority
           />
           {/* Glow ring behind character */}
-          <div className="absolute inset-0 -m-8 rounded-full border border-white/10 animate-spin-slow"/>
-          <div className="absolute inset-0 -m-16 rounded-full border border-violet/10 animate-spin-reverse"/>
-        </div>
-      </div>
+          <motion.div className="absolute inset-0 -m-8 rounded-full border border-white/10 animate-spin-slow" style={{opacity:glowOpacity}}/>
+          <motion.div className="absolute inset-0 -m-16 rounded-full border border-violet/10 animate-spin-reverse" style={{opacity:glowOpacity}}/>
+        </motion.div>
+      </motion.div>
 
       {/* Bottom gradient overlay - below character */}
       <div className="pointer-events-none absolute inset-0 rounded-[3rem] bg-gradient-to-t from-[#060612]/70 via-transparent to-[#060612]/20 z-[5]"/>
