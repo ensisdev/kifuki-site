@@ -1,50 +1,98 @@
 'use client';
-import {Canvas,useFrame,useThree} from '@react-three/fiber';
+import {Canvas,useFrame} from '@react-three/fiber';
 import {Float,PerspectiveCamera,Image as DreiImage} from '@react-three/drei';
 import {useRef,useMemo} from 'react';
 import * as THREE from 'three';
 
-function Stars({count=200}:{count?:number}){
+function Stars({count=300}:{count?:number}){
   const ref=useRef<THREE.Points>(null!);
-  const positions=useMemo(()=>{const arr=new Float32Array(count*3);for(let i=0;i<count;i++){arr[i*3]=(Math.random()-.5)*30;arr[i*3+1]=(Math.random()-.5)*30;arr[i*3+2]=(Math.random()-.5)*15-5}return arr},[count]);
-  const sizes=useMemo(()=>{const arr=new Float32Array(count);for(let i=0;i<count;i++) arr[i]=Math.random()*2+.5;return arr},[count]);
-  useFrame((s)=>{if(ref.current){ref.current.rotation.y=s.clock.elapsedTime*.01;ref.current.rotation.x=Math.sin(s.clock.elapsedTime*.005)*.1}});
-  return <points ref={ref}><bufferGeometry><bufferAttribute attach="attributes-position" args={[positions,3]}/><bufferAttribute attach="attributes-size" args={[sizes,3]}/></bufferGeometry><pointsMaterial size={.04} color="#ffffff" transparent opacity={.7} sizeAttenuation depthWrite={false}/></points>;
+  const [positions,sizes,colors]=useMemo(()=>{
+    const pos=new Float32Array(count*3);const sz=new Float32Array(count);const col=new Float32Array(count*3);
+    const palette=[[1,.5,.65],[.45,.65,.83],[.33,.84,.82],[1,.85,.24]];
+    for(let i=0;i<count;i++){
+      pos[i*3]=(Math.random()-.5)*40;pos[i*3+1]=(Math.random()-.5)*40;pos[i*3+2]=(Math.random()-.5)*20-5;
+      sz[i]=Math.random()*2.5+.3;
+      const c=palette[Math.floor(Math.random()*palette.length)];col[i*3]=c[0];col[i*3+1]=c[1];col[i*3+2]=c[2];
+    }
+    return[pos,sz,col] as const;
+  },[count]);
+  useFrame((s)=>{if(ref.current){ref.current.rotation.y=s.clock.elapsedTime*.008;ref.current.rotation.x=Math.sin(s.clock.elapsedTime*.004)*.08}});
+  return <points ref={ref}><bufferGeometry><bufferAttribute attach="attributes-position" args={[positions,3]}/><bufferAttribute attach="attributes-size" args={[sizes,3]}/><bufferAttribute attach="attributes-color" args={[colors,3]}/></bufferGeometry><pointsMaterial size={.05} vertexColors transparent opacity={.8} sizeAttenuation depthWrite={false}/></points>;
 }
 
-function FloatingRing({radius=2.5,speed=.3,color='#ff6b9a'}:{radius?:number;speed?:number;color?:string}){
+function ShootingStar(){
   const ref=useRef<THREE.Mesh>(null!);
-  useFrame((s)=>{if(ref.current){ref.current.rotation.z=s.clock.elapsedTime*speed;ref.current.rotation.x=Math.PI/3+.2}});
-  return <mesh ref={ref}><torusGeometry args={[radius,.015,16,100]}/><meshBasicMaterial color={color} transparent opacity={.35}/></mesh>;
+  const startPos=useMemo(()=>new THREE.Vector3((Math.random()-.5)*20,Math.random()*8+5,-5),[]);
+  const speed=useMemo(()=>Math.random()*.3+.2,[]);
+  const delay=useMemo(()=>Math.random()*10,[]);
+  useFrame((s)=>{
+    if(!ref.current)return;
+    const t=(s.clock.elapsedTime+delay)*speed;
+    const loop=t%8;
+    if(loop<2){
+      ref.current.position.x=startPos.x+loop*12;
+      ref.current.position.y=startPos.y-loop*4;
+      ref.current.position.z=startPos.z;
+      ref.current.scale.setScalar(Math.min(loop,.5)*2);
+      (ref.current.material as THREE.MeshBasicMaterial).opacity=Math.min(1,loop*2);
+    }else{
+      (ref.current.material as THREE.MeshBasicMaterial).opacity=0;
+      ref.current.scale.setScalar(0);
+    }
+  });
+  return <mesh ref={ref}><sphereGeometry args={[.04,8,8]}/><meshBasicMaterial color="#ffffff" transparent opacity={0}/></mesh>;
 }
 
-function GlowOrb({position,delay=0}:{position:[number,number,number];delay?:number}){
+function FloatingRing({radius=2.5,speed=.3,color='#ff6b9a',tilt=Math.PI/3}){
   const ref=useRef<THREE.Mesh>(null!);
-  useFrame((s)=>{if(ref.current){const t=s.clock.elapsedTime+delay;ref.current.position.y=position[1]+Math.sin(t*.5)*.3;ref.current.scale.setScalar(1+Math.sin(t*1.5)*.15)}});
-  return <mesh ref={ref} position={position}><sphereGeometry args={[.08,16,16]}/><meshBasicMaterial color="#7568c9" transparent opacity={.5}/></mesh>;
+  useFrame((s)=>{if(ref.current){ref.current.rotation.z=s.clock.elapsedTime*speed;ref.current.rotation.x=tilt}});
+  return <mesh ref={ref}><torusGeometry args={[radius,.012,16,100]}/><meshBasicMaterial color={color} transparent opacity={.3}/></mesh>;
+}
+
+function GlowOrb({position,delay=0,color='#7568c9',size=.08}:{position:[number,number,number];delay?:number;color?:string;size?:number}){
+  const ref=useRef<THREE.Mesh>(null!);
+  useFrame((s)=>{if(ref.current){const t=s.clock.elapsedTime+delay;ref.current.position.y=position[1]+Math.sin(t*.5)*.4;ref.current.position.x=position[0]+Math.cos(t*.3)*.2;ref.current.scale.setScalar(1+Math.sin(t*1.5)*.2)}});
+  return <mesh ref={ref} position={position}><sphereGeometry args={[size,16,16]}/><meshBasicMaterial color={color} transparent opacity={.5}/></mesh>;
+}
+
+function NebulaCloud({position,color,scale=1}:{position:[number,number,number];color:string;scale?:number}){
+  const ref=useRef<THREE.Mesh>(null!);
+  useFrame((s)=>{if(ref.current){const t=s.clock.elapsedTime;ref.current.rotation.z=t*.05;ref.current.scale.setScalar(scale*(1+Math.sin(t*.3)*.1))}});
+  return <mesh ref={ref} position={position}><planeGeometry args={[3,3]}/><meshBasicMaterial color={color} transparent opacity={.06} side={THREE.DoubleSide} depthWrite={false}/></mesh>;
 }
 
 function Character(){
   const ref=useRef<THREE.Group>(null!);
   const glowRef=useRef<THREE.Mesh>(null!);
+  const ringRef=useRef<THREE.Mesh>(null!);
   useFrame((s)=>{
+    const t=s.clock.elapsedTime;
     if(ref.current){
-      ref.current.rotation.y=THREE.MathUtils.lerp(ref.current.rotation.y,s.pointer.x*.15,.04);
-      ref.current.rotation.x=THREE.MathUtils.lerp(ref.current.rotation.x,-s.pointer.y*.08,.04);
+      ref.current.rotation.y=THREE.MathUtils.lerp(ref.current.rotation.y,s.pointer.x*.15,.03);
+      ref.current.rotation.x=THREE.MathUtils.lerp(ref.current.rotation.x,-s.pointer.y*.08,.03);
+      ref.current.position.y=Math.sin(t*.7)*.15;
     }
     if(glowRef.current){
-      const t=s.clock.elapsedTime;
-      (glowRef.current.material as THREE.MeshBasicMaterial).opacity=.15+Math.sin(t*2)*.08;
-      glowRef.current.scale.setScalar(1+Math.sin(t*1.5)*.05);
+      (glowRef.current.material as THREE.MeshBasicMaterial).opacity=.12+Math.sin(t*2)*.06;
+      glowRef.current.scale.setScalar(1+Math.sin(t*1.5)*.06);
+    }
+    if(ringRef.current){
+      ringRef.current.rotation.z=t*.2;
+      ringRef.current.rotation.x=Math.PI/3+Math.sin(t*.3)*.1;
+      (ringRef.current.material as THREE.MeshBasicMaterial).opacity=.2+Math.sin(t)*.1;
     }
   });
   return (
-    <Float speed={.8} rotationIntensity={.12} floatIntensity={.35}>
+    <Float speed={.7} rotationIntensity={.1} floatIntensity={.3}>
       <group ref={ref}>
         <DreiImage url="/character/karakter.png" transparent scale={[3.5,4.6]}/>
-        <mesh ref={glowRef} position={[0,0,-.1]}>
-          <circleGeometry args={[2.8,32]}/>
-          <meshBasicMaterial color="#7568c9" transparent opacity={.15} side={THREE.DoubleSide}/>
+        <mesh ref={glowRef} position={[0,0,-.15]}>
+          <circleGeometry args={[3,32]}/>
+          <meshBasicMaterial color="#7568c9" transparent opacity={.12} side={THREE.DoubleSide}/>
+        </mesh>
+        <mesh ref={ringRef} position={[0,0,-.2]}>
+          <torusGeometry args={[2.6,.02,16,64]}/>
+          <meshBasicMaterial color="#ff6b9a" transparent opacity={.2} side={THREE.DoubleSide}/>
         </mesh>
       </group>
     </Float>
@@ -52,21 +100,28 @@ function Character(){
 }
 
 function Scene(){
-  const {gl}=useThree();
   return <>
     <PerspectiveCamera makeDefault position={[0,0,7]}/>
-    <ambientLight intensity={1.5}/>
-    <directionalLight position={[5,5,5]} intensity={.8}/>
-    <pointLight position={[-3,2,4]} intensity={.6} color="#ff6b9a"/>
-    <pointLight position={[3,-2,4]} intensity={.6} color="#53d7d1"/>
-    <Stars count={250}/>
-    <FloatingRing radius={3.2} speed={.15} color="#ff6b9a"/>
-    <FloatingRing radius={3.8} speed={-.1} color="#53d7d1"/>
-    <FloatingRing radius={4.4} speed={.08} color="#7568c9"/>
-    <GlowOrb position={[-2.5,1.5,-1]} delay={0}/>
-    <GlowOrb position={[2.5,-1,-1]} delay={1.5}/>
-    <GlowOrb position={[-1,-2,-1]} delay={3}/>
-    <GlowOrb position={[1.5,2,-1]} delay={4.5}/>
+    <ambientLight intensity={1.2}/>
+    <directionalLight position={[5,5,5]} intensity={.7}/>
+    <pointLight position={[-4,3,5]} intensity={.8} color="#ff6b9a" distance={15}/>
+    <pointLight position={[4,-2,5]} intensity={.7} color="#53d7d1" distance={15}/>
+    <pointLight position={[0,0,6]} intensity={.4} color="#7568c9" distance={12}/>
+    <Stars count={350}/>
+    <FloatingRing radius={3} speed={.12} color="#ff6b9a" tilt={Math.PI/3}/>
+    <FloatingRing radius={3.6} speed={-.08} color="#53d7d1" tilt={Math.PI/2.5}/>
+    <FloatingRing radius={4.2} speed={.06} color="#7568c9" tilt={Math.PI/4}/>
+    <FloatingRing radius={4.8} speed={-.04} color="#ffd83d" tilt={Math.PI/3.5}/>
+    <GlowOrb position={[-2.5,1.5,-1]} delay={0} color="#ff6b9a" size={.06}/>
+    <GlowOrb position={[2.5,-1,-1]} delay={1.5} color="#53d7d1" size={.07}/>
+    <GlowOrb position={[-1,-2,-1]} delay={3} color="#7568c9" size={.05}/>
+    <GlowOrb position={[1.5,2,-1]} delay={4.5} color="#ffd83d" size={.06}/>
+    <GlowOrb position={[-3,0,-2]} delay={2} color="#ff6b9a" size={.04}/>
+    <GlowOrb position={[3,1,-2]} delay={5} color="#53d7d1" size={.04}/>
+    <ShootingStar/><ShootingStar/><ShootingStar/>
+    <NebulaCloud position={[-5,3,-8]} color="#7568c9" scale={1.5}/>
+    <NebulaCloud position={[5,-2,-8]} color="#ff6b9a" scale={1.2}/>
+    <NebulaCloud position={[0,5,-10]} color="#53d7d1" scale={1.8}/>
     <Character/>
   </>;
 }
@@ -74,12 +129,17 @@ function Scene(){
 export default function ThreeCharacter(){
   return (
     <div className="relative h-[520px] w-full sm:h-[680px]">
-      <div className="absolute inset-0 rounded-[3rem] bg-gradient-to-b from-[#0a0a1a] via-[#12122a] to-[#1a1a3a] opacity-90"/>
-      <div className="absolute inset-0 rounded-[3rem] bg-[radial-gradient(ellipse_at_center,rgba(117,104,201,0.15)_0%,transparent_70%)]"/>
+      <div className="absolute inset-0 rounded-[3rem] overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#060612] via-[#0c0c24] to-[#141432]"/>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(117,104,201,.12)_0%,transparent_50%)]"/>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_80%,rgba(255,107,154,.08)_0%,transparent_50%)]"/>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,rgba(83,215,209,.06)_0%,transparent_60%)]"/>
+      </div>
       <Canvas dpr={[1,1.7]} gl={{alpha:true,antialias:true}}>
         <Scene/>
       </Canvas>
-      <div className="pointer-events-none absolute inset-0 rounded-[3rem] bg-gradient-to-t from-[#0a0a1a]/60 via-transparent to-transparent"/>
+      <div className="pointer-events-none absolute inset-0 rounded-[3rem] bg-gradient-to-t from-[#060612]/70 via-transparent to-[#060612]/20"/>
+      <div className="pointer-events-none absolute inset-0 rounded-[3rem] animate-glow-pulse"/>
     </div>
   );
 }
