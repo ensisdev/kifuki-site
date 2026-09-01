@@ -1,9 +1,15 @@
 'use client';
 import {Canvas,useFrame} from '@react-three/fiber';
 import {PerspectiveCamera} from '@react-three/drei';
-import {useRef,useMemo} from 'react';
+import {useRef,useMemo,useState,useEffect,Component,ReactNode} from 'react';
 import * as THREE from 'three';
 import Image from 'next/image';
+
+class WebGLErrorBoundary extends Component<{children:ReactNode},{hasError:boolean}>{
+  state={hasError:false};
+  static getDerivedStateFromError(){return{hasError:true}}
+  render(){return this.state.hasError?null:this.props.children}
+}
 
 function Stars({count=300}:{count?:number}){
   const ref=useRef<THREE.Points>(null!);
@@ -88,6 +94,9 @@ function SpaceScene(){
 }
 
 export default function ThreeCharacter(){
+  const[supportsWebGL,setSupportsWebGL]=useState<boolean|null>(null);
+  useEffect(()=>{try{const c=document.createElement('canvas');const gl=c.getContext('webgl')||c.getContext('experimental-webgl');setSupportsWebGL(!!gl)}catch{setSupportsWebGL(false)}},[]);
+
   return (
     <div className="relative h-[520px] w-full sm:h-[680px]">
       {/* Space background with gradients */}
@@ -98,10 +107,14 @@ export default function ThreeCharacter(){
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,rgba(83,215,209,.06)_0%,transparent_60%)]"/>
       </div>
 
-      {/* Three.js star field and effects */}
-      <Canvas dpr={[1,1.7]} gl={{alpha:true,antialias:true}} className="absolute inset-0">
-        <SpaceScene/>
-      </Canvas>
+      {/* Three.js star field and effects - with WebGL fallback */}
+      {supportsWebGL!==false && (
+        <WebGLErrorBoundary>
+          <Canvas dpr={[1,1.7]} gl={{alpha:true,antialias:true}} className="absolute inset-0">
+            <SpaceScene/>
+          </Canvas>
+        </WebGLErrorBoundary>
+      )}
 
       {/* Character image - HTML overlay with CSS animations */}
       <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
