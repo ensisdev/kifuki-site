@@ -1,6 +1,6 @@
 'use client';
 import {Canvas,useFrame} from '@react-three/fiber';
-import {Float,PerspectiveCamera,Image as DreiImage} from '@react-three/drei';
+import {Float,PerspectiveCamera,useTexture} from '@react-three/drei';
 import {useRef,useMemo} from 'react';
 import * as THREE from 'three';
 
@@ -65,6 +65,9 @@ function Character(){
   const ref=useRef<THREE.Group>(null!);
   const glowRef=useRef<THREE.Mesh>(null!);
   const ringRef=useRef<THREE.Mesh>(null!);
+  const texture=useTexture('/character/karakter.png');
+  const aspect=(texture.image as HTMLImageElement).width/(texture.image as HTMLImageElement).height;
+  const imgW=3.5;const imgH=imgW/aspect;
   useFrame((s)=>{
     const t=s.clock.elapsedTime;
     if(ref.current){
@@ -85,7 +88,10 @@ function Character(){
   return (
     <Float speed={.7} rotationIntensity={.1} floatIntensity={.3}>
       <group ref={ref}>
-        <DreiImage url="/character/karakter.png" transparent scale={[3.5,4.6]}/>
+        <mesh>
+          <planeGeometry args={[imgW,imgH]}/>
+          <meshBasicMaterial map={texture} transparent alphaTest={.01} depthWrite={false}/>
+        </mesh>
         <mesh ref={glowRef} position={[0,0,-.15]}>
           <circleGeometry args={[3,32]}/>
           <meshBasicMaterial color="#7568c9" transparent opacity={.12} side={THREE.DoubleSide}/>
